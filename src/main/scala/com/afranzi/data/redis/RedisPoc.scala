@@ -2,7 +2,7 @@ package com.afranzi.data.redis
 
 import java.time.{Clock, LocalDateTime, ZoneOffset}
 
-import com.redis.RedisClient
+import com.redis._
 
 import scala.collection.immutable
 import scala.util.Random
@@ -15,7 +15,6 @@ trait RedisPoc {
   val delayedQueue = "delayed"
   val tasksQueue = "tasks"
 
-
   def delayTask(queueName: String)(id: String, delay: Int)(implicit r: RedisClient): Unit = {
     r.zadd(queueName, delay, id)
     println(s"[-] Delaying task [$id]")
@@ -24,33 +23,42 @@ trait RedisPoc {
   def consumeTasks(queueName: String)(implicit r: RedisClient): Unit = {
     r.lpop(queueName) match {
       case Some(item) => println(s"[x] Received task [$item]")
-      case _ => print(".")
+      case _          => print(".")
     }
+  }
+
+  def consumeChannel(pubsub: PubSubMessage)(implicit r: RedisClient, clock: Clock): Unit = pubsub match {
+    case S(channel, no) => println("Subscribed to " + channel + " and count = " + no)
+    case U(channel, no) => println("Unsubscribed from " + channel + " and count = " + no)
+    case M(_, msg) =>
+      val now = LocalDateTime.now(clock)
+      println(s"[x] Received task [$msg] [$now]")
   }
 
   def pollTasks(delayedQueueName: String, readyQueueName: String)(implicit r: RedisClient, clock: Clock): Seq[String] = {
     val now = LocalDateTime.now(clock)
-
     val ts: Int = now.toEpochSecond(utcZone).toInt
-
     val rangedItems: Option[List[(String, Double)]] = r.zrangebyscoreWithScore(delayedQueueName, max = ts, limit = Some(0, 10))
-
     val items: immutable.Seq[(String, Double)] = rangedItems match {
-      case Some(Nil) => print(".")
+      case Some(Nil) =>
+        print(".")
         List.empty
-      case Some(list) => list
+      case Some(list) =>
+        println()
+        list
       case None =>
         print(".")
         List.empty
     }
 
-    items.map { case (item: String, score: Double) =>
-      val time = LocalDateTime.ofEpochSecond(score.toLong, 0, utcZone)
+    items.map {
+      case (item: String, score: Double) =>
+        val time = LocalDateTime.ofEpochSecond(score.toLong, 0, utcZone)
+        println(s"[x] Received delayed task [$item] with score[$score] - [$time]")
 
-      println(s"[x] Received delayed task [$item] with score[$score] - [$time]")
-      r.rpush(readyQueueName, item)
-      r.zrem(delayedQueueName, item)
-      item
+        r.publish(readyQueueName, item)
+        r.zrem(delayedQueueName, item)
+        item
     }
   }
 

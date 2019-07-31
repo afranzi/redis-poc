@@ -8,30 +8,51 @@ import scala.util.Random
 
 object NotificationPublisher extends App with RedisPoc {
 
+  /**
+    * It publish notifications with Random delays
+    */
+
   def run(): Unit = {
     implicit val r: RedisClient = new RedisClient("localhost", 6379)
     implicit val random: Random = new Random()
     implicit val clock: Clock = Clock.systemDefaultZone()
 
-    messageProducerInfinite(delayedQueue, 40, 1000)
+    messageProducerInfinite(delayedQueue, 300, 100)
   }
 
   run()
-
 }
-
 
 object NotificationPoller extends App with RedisPoc {
 
+  /**
+    * It pulls the delayed queue where the Score is the timestamp from now()
+    */
+
   def run(): Unit = {
     implicit val r: RedisClient = new RedisClient("localhost", 6379)
     implicit val random: Random = new Random()
     implicit val clock: Clock = Clock.systemDefaultZone()
 
-    pollTaskInfinite(delayedQueue, tasksQueue, 1000)
+    pollTaskInfinite(delayedQueue, tasksQueue, 100)
   }
 
   run()
-
 }
 
+object NotificationSubscriber extends App with RedisPoc {
+
+  /**
+    * It subscribes to the channel with Notifications ready to be send
+    */
+
+  def run(): Unit = {
+    implicit val r: RedisClient = new RedisClient("localhost", 6379)
+    implicit val random: Random = new Random()
+    implicit val clock: Clock = Clock.systemDefaultZone()
+
+    r.subscribe(tasksQueue)(consumeChannel)
+  }
+
+  run()
+}

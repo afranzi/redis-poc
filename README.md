@@ -17,6 +17,12 @@ java -cp target/scala-2.11/redis-assembly-0.0.1-SNAPSHOT.jar  com.afranzi.data.r
 java -cp target/scala-2.11/redis-assembly-0.0.1-SNAPSHOT.jar  com.afranzi.data.redis.NotificationSubscriber
 ```
 
+## Notes
+In case we need more than one Notification Puller to support higher frequencies, we shall implement a pool/lock system to avoid pulling twice the same message.
+> Ref: [6.2 Distributed locking](https://redislabs.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-2-distributed-locking/)
+
+Besides, we need to persist in some way the delayed notifications in case Redis *crashes/shuts down* since we could lose all the pending notifications.
+
 ## Tutorials
 
 - [e-Book - Redis in Action](https://redislabs.com/community/ebook/)

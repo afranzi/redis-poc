@@ -17,13 +17,13 @@ object NotificationPublisher extends App with RedisPoc {
     implicit val random: Random = new Random()
     implicit val clock: Clock = Clock.systemDefaultZone()
 
-    messageProducerInfinite(delayedQueue, 300, 100)
+    messageProducerInfinite(delayedQueue, 300, 5)
   }
 
   run()
 }
 
-object NotificationPoller extends App with RedisPoc {
+object NotificationPuller extends App with RedisPoc {
 
   /**
     * It pulls the delayed queue where the Score is the timestamp from now()
@@ -34,7 +34,7 @@ object NotificationPoller extends App with RedisPoc {
     implicit val random: Random = new Random()
     implicit val clock: Clock = Clock.systemDefaultZone()
 
-    pollTaskInfinite(delayedQueue, tasksQueue, 100)
+    pullTaskInfinite(delayedQueue, tasksQueue, 100)
   }
 
   run()

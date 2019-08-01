@@ -10,8 +10,8 @@ sbt 'set test in assembly := {}' clean assembly
 # Notification Publisher
 java -cp target/scala-2.11/redis-assembly-0.0.1-SNAPSHOT.jar  com.afranzi.data.redis.NotificationPublisher
 
-# Notification Poller
-java -cp target/scala-2.11/redis-assembly-0.0.1-SNAPSHOT.jar  com.afranzi.data.redis.NotificationPoller
+# Notification Puller
+java -cp target/scala-2.11/redis-assembly-0.0.1-SNAPSHOT.jar  com.afranzi.data.redis.NotificationPuller
 
 # Notification Subscriber to the task channel
 java -cp target/scala-2.11/redis-assembly-0.0.1-SNAPSHOT.jar  com.afranzi.data.redis.NotificationSubscriber
